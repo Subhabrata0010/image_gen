@@ -4,7 +4,7 @@ import {
   createUserContent,
   createPartFromUri,
 } from "@google/genai";
-
+import removeMd from "remove-markdown";
 
 const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY!,
@@ -85,7 +85,7 @@ export async function runGeminiPipeline(
   try {
     const response = await a4fClient.images.generate({
       model: "provider-4/imagen-4",
-      prompt: parsed.refinedPrompt,
+      prompt: parsed.refinedPrompt = removeMd(parsed.refinedPrompt || "").trim(),
       n: 1,
       size: "1024x1024",
     });
@@ -98,7 +98,7 @@ export async function runGeminiPipeline(
 
   return {
     imageUrl,
-    explanation: parsed.explanation,
+    explanation: removeMd(parsed.explanation || "").trim(),
     sources: Array.isArray(parsed.sources) ? parsed.sources : [],
   };
 }

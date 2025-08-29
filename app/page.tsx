@@ -2,6 +2,10 @@
 
 import React, { useState, useCallback } from "react";
 import { Upload, X, FileImage, Sparkles, ImageIcon, BookOpen, ExternalLink, RotateCcw } from "lucide-react";
+import { GridBeams } from "@/components/magicui/grid-beams";
+import {} from "@/components/ui/background-lines";
+import Image from "next/image";
+
 
 // Simple loading spinner
 const LoadingSpinner = ({ loading }: { loading: boolean }) => {
@@ -164,22 +168,31 @@ export default function Home() {
   const isFormValid = prompt.trim().length > 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+    <section>
+    <div className="min-h-screen bg-gradient-to-br from-blue-950 to-black">
       <LoadingSpinner loading={loading} />
-      
+      <GridBeams>
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         {/* Header */}
         <div className="text-center mb-8">
+          <Image
+            src="/lastminuteengineering-logo.png"
+            alt="Logo"
+            className="h-12 mx-auto"
+            width={60}
+            height={100}
+          />
           <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
             AI Schematic Generator
           </h1>
-          <p className="text-gray-600 text-lg">
+          <p className="text-gray-200 text-lg">
             Transform your ideas into detailed schematics and diagrams
           </p>
         </div>
 
         {/* Main Form Card */}
-        <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
+
+        <div className="bg-gray-300 rounded-2xl shadow-xl p-8 mb-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Prompt Input */}
             <div className="space-y-2">
@@ -187,7 +200,7 @@ export default function Home() {
                 Describe what you want to create
               </label>
               <textarea
-                className="w-full border-2 border-gray-200 rounded-xl p-4 focus:border-blue-500 focus:outline-none transition-colors resize-none"
+                className="w-full border-2 border-gray-400 rounded-xl p-4 focus:border-blue-500 focus:outline-none transition-colors resize-none"
                 placeholder="e.g., A circuit diagram for an LED flashlight with battery, switch, resistor..."
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
@@ -237,7 +250,7 @@ export default function Home() {
             </div>
           </form>
         </div>
-
+              
         {/* Results Section */}
         {result && (
           <div className="space-y-6">
@@ -322,7 +335,7 @@ export default function Home() {
             )}
           </div>
         )}
-
+        
         {/* Features Section */}
         {!result && !loading && (
           <div className="mt-12 grid md:grid-cols-3 gap-6">
@@ -352,6 +365,8 @@ export default function Home() {
           </div>
         )}
       </div>
+      </GridBeams>
     </div>
+    </section>
   );
 }
