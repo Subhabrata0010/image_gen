@@ -1,52 +1,78 @@
 "use client";
+
 import { useState } from "react";
-import ResultView from "@/components/ResultView";
 
 export default function Home() {
-  const [input, setInput] = useState("");
-  const [result, setResult] = useState<{
-    imageUrl: string;
-    explanation: string;
-  } | null>(null);
+  const [prompt, setPrompt] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+  const [result, setResult] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const res = await fetch("/api/analyze", {
+    setLoading(true);
+
+    const formData = new FormData();
+    formData.append("prompt", prompt);
+    if (file) formData.append("file", file);
+
+    const res = await fetch("/api/generate", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ input }),
+      body: formData,
     });
+
     const data = await res.json();
     setResult(data);
+    setLoading(false);
   }
 
   return (
-    <main className="bg-transparent">
-      <section className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-        <div className="min-h-screen flex flex-col items-center p-6">
-          <form onSubmit={handleSubmit} className="space-x-2 mb-6">
-            <input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Describe your circuit..."
-              className="border px-3 py-2 rounded bg-gray-200"
-            />
-            <button
-              type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded"
-            >
-              Generate
-            </button>
-          </form>
+    <div className="p-8 max-w-3xl mx-auto space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <textarea
+          className="w-full border p-2 rounded"
+          placeholder="Enter your prompt..."
+          value={prompt}
+          onChange={(e) => setPrompt(e.target.value)}
+        />
+        <input
+          type="file"
+          accept="image/*"
+          onChange={(e) => setFile(e.target.files?.[0] || null)}
+        />
+        <button
+          type="submit"
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+        >
+          Generate
+        </button>
+      </form>
 
-          {result && (
-            <ResultView
-              imageUrl={result.imageUrl}
-              explanation={result.explanation}
-            />
+      {loading && <p>Generating...</p>}
+
+      {result && (
+        <div className="space-y-4">
+          {result.imageUrl && (
+            <img src={result.imageUrl} alt="Generated schematic" className="rounded shadow" />
           )}
+          <div>
+            <h2 className="font-bold text-lg">Explanation</h2>
+            <p>{result.explanation}</p>
+          </div>
+          <div>
+            <h2 className="font-bold text-lg">Sources</h2>
+            <ul className="list-disc list-inside">
+              {result.sources?.map((src: string, i: number) => (
+                <li key={i}>
+                  <a href={src} target="_blank" className="text-blue-600 underline">
+                    {src}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
-      </section>
-    </main>
+      )}
+    </div>
   );
 }

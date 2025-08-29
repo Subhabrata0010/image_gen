@@ -1,75 +1,104 @@
-import { GoogleGenerativeAI, Part } from "@google/generative-ai";
-import { parseGeminiProOutput, ParsedOutput } from "./parser";
+import {
+  GoogleGenAI,
+  Type,
+  createUserContent,
+  createPartFromUri,
+} from "@google/genai";
 
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY!);
 
-/**
- * Type guard: checks whether a Part has inlineData
- */
-function isInlineDataPart(part: Part): part is Part & { inlineData: { data: string; mimeType: string } } {
-  return typeof (part as { inlineData?: unknown }).inlineData === "object" && part.inlineData !== undefined;
+const ai = new GoogleGenAI({
+  apiKey: process.env.GEMINI_API_KEY!,
+});
+
+import OpenAI from "openai";
+const a4fClient = new OpenAI({
+  apiKey: process.env.A4F_API_KEY!,
+  baseURL: "https://api.a4f.co/v1",
+});
+
+export interface ProResponse {
+  refinedPrompt: string;
+  explanation: string;
+  sources: string[];
 }
 
+function hasInlineData(
+  part: unknown
+): part is { inlineData: { data: string; mimeType: string } } {
+  if (!part || typeof part !== "object") return false;
+  const maybe = part as { inlineData?: { data?: unknown; mimeType?: unknown } };
+  return (
+    !!maybe.inlineData &&
+    typeof maybe.inlineData.data === "string" &&
+    typeof maybe.inlineData.mimeType === "string"
+  );
+}
 
-export async function runGeminiPipeline(prompt: string, file?: File) {
-  let inlinePart: Part | undefined;
+export async function runGeminiPipeline(
+  prompt: string,
+  file?: File
+): Promise<{ imageUrl: string; explanation: string; sources: string[] }> {
+  let imageUri: string | undefined;
+  let uploadedMime: string | undefined;
 
   if (file) {
-    const buffer = Buffer.from(await file.arrayBuffer());
-    inlinePart = {
-      inlineData: {
-        data: buffer.toString("base64"),
-        mimeType: file.type || "image/png",
-      },
-    };
+    const uploaded = await ai.files.upload({ file }); // ← pass the File/Blob directly
+    imageUri = uploaded.uri;
+    uploadedMime = uploaded.mimeType;
   }
 
-  // Step 1 — Reasoning with Pro
-  const proModel = genAI.getGenerativeModel({ model: "gemini-2.5-pro" });
-  const proResult = await proModel.generateContent({
+  // ── Step 1: Pro → strict JSON schema (no custom parser needed)
+  const pro = await ai.models.generateContent({
+    model: "gemini-2.5-pro",
     contents: [
-      {
-        role: "user",
-        parts: [
-          {
-            text: `Analyze the uploaded image and combine with prompt: "${prompt}".
-                   Respond ONLY in this JSON format:
-                   {
-                     "refinedPrompt": "schematic prompt for image generation",
-                     "explanation": "plain-language explanation",
-                     "sources": ["optional source1", "source2"]
-                   }`
-          },
-          ...(inlinePart ? [inlinePart] : []),
-        ],
-      },
+      createUserContent([
+        `Analyze the uploaded image (if provided) and combine it with this prompt:\n"${prompt}".\n\nRespond ONLY in JSON with exactly these fields:\n{\n  "refinedPrompt": "schematic/diagram prompt suitable for Flash Image Preview",\n  "explanation": "step-by-step explanation and theory",\n  "sources": ["https://...", "https://..."]\n}\n- "sources" must be reliable web/YouTube URLs.\n- No extra commentary outside JSON.`,
+        ...(imageUri && uploadedMime
+          ? [createPartFromUri(imageUri, uploadedMime)]
+          : []),
+      ]),
     ],
+    config: {
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: Type.OBJECT,
+        properties: {
+          refinedPrompt: { type: Type.STRING },
+          explanation: { type: Type.STRING },
+          sources: { type: Type.ARRAY, items: { type: Type.STRING } },
+        },
+        propertyOrdering: ["refinedPrompt", "explanation", "sources"],
+      },
+    },
   });
 
-  const parsed: ParsedOutput = parseGeminiProOutput(proResult.response.text());
+  let parsed: ProResponse;
+  try {
+    parsed = JSON.parse(pro.text!) as ProResponse;
+  } catch {
+    throw new Error("Gemini Pro did not return valid JSON.");
+  }
 
-  // Step 2 — Image generation with Flash
-  const flashModel = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-  const flashResult = await flashModel.generateContent({
-    contents: [
-      {
-        role: "user",
-        parts: [{ text: parsed.refinedPrompt }],
-      },
-    ],
-  });
-
-  const parts: Part[] = flashResult.response?.candidates?.[0]?.content?.parts || [];
-  const imagePart = parts.find(isInlineDataPart);
-
+  // ── Step 2: Flash Image Preview → generate image from refinedPrompt
   let imageUrl = "";
-  if (imagePart) {
-    imageUrl = `data:${imagePart.inlineData.mimeType};base64,${imagePart.inlineData.data}`;
+
+  try {
+    const response = await a4fClient.images.generate({
+      model: "provider-4/imagen-4",
+      prompt: parsed.refinedPrompt,
+      n: 1,
+      size: "1024x1024",
+    });
+
+    imageUrl = response.data?.[0]?.url || "";
+    
+  } catch (err: any) {
+    console.error("image generation failed:", err.message || err);
   }
 
   return {
     imageUrl,
     explanation: parsed.explanation,
-    sources: parsed.sources,
+    sources: Array.isArray(parsed.sources) ? parsed.sources : [],
   };
 }
