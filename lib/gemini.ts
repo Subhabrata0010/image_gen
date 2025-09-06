@@ -42,12 +42,11 @@ export async function runGeminiPipeline(
   let uploadedMime: string | undefined;
 
   if (file) {
-    const uploaded = await ai.files.upload({ file }); // ← pass the File/Blob directly
+    const uploaded = await ai.files.upload({ file });
     imageUri = uploaded.uri;
     uploadedMime = uploaded.mimeType;
   }
 
-  // ── Step 1: Pro → strict JSON schema (no custom parser needed)
   const pro = await ai.models.generateContent({
     model: "gemini-2.5-pro",
     contents: [
@@ -79,7 +78,6 @@ export async function runGeminiPipeline(
     throw new Error("Gemini Pro did not return valid JSON.");
   }
 
-  // ── Step 2: Flash Image Preview → generate image from refinedPrompt
   let imageUrl = "";
 
   try {

@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Imagify by LME",
-  description: "your best buddy by LME",
+  title: "Imagify",
+  description: "your best buddy",
 };
 
 export default function RootLayout({

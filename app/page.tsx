@@ -4,10 +4,8 @@ import React, { useState, useCallback } from "react";
 import { Upload, X, FileImage, Sparkles, ImageIcon, BookOpen, ExternalLink, RotateCcw } from "lucide-react";
 import { GridBeams } from "@/components/magicui/grid-beams";
 import {} from "@/components/ui/background-lines";
-import Image from "next/image";
 
 
-// Simple loading spinner
 const LoadingSpinner = ({ loading }: { loading: boolean }) => {
   if (!loading) return null;
 
@@ -29,7 +27,6 @@ const LoadingSpinner = ({ loading }: { loading: boolean }) => {
   );
 };
 
-// File dropzone component
 interface FileDropzoneProps {
   file: File | null;
   onFileChange: (file: File) => void;
@@ -93,17 +90,17 @@ const FileDropzone: React.FC<FileDropzoneProps> = ({ file, onFileChange, onRemov
       className={`border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200 ${
         dragActive 
           ? 'border-blue-400 bg-blue-50' 
-          : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
+          : 'border-gray-300 hover:border-gray-400 hover:bg-cyan-950'
       }`}
       onDragEnter={handleDrag}
       onDragLeave={handleDrag}
       onDragOver={handleDrag}
       onDrop={handleDrop}
     >
-      <Upload className={`w-12 h-12 mx-auto mb-4 ${dragActive ? 'text-blue-500' : 'text-gray-400'}`} />
-      <p className="text-lg font-medium text-gray-700 mb-2">
+      <Upload className={`w-12 h-12 mx-auto mb-4 ${dragActive ? 'text-blue-500' : 'text-white'}`} />
+      <p className="text-lg font-medium text-amber-50 mb-2">
         Drop your image here, or 
-        <label className="text-blue-600 hover:text-blue-700 cursor-pointer ml-1">
+        <label className="text-blue-500 hover:text-cyan-500 cursor-pointer ml-1">
           browse
           <input
             type="file"
@@ -113,7 +110,7 @@ const FileDropzone: React.FC<FileDropzoneProps> = ({ file, onFileChange, onRemov
           />
         </label>
       </p>
-      <p className="text-sm text-gray-500">Supports PNG, JPG, GIF up to 10MB</p>
+      <p className="text-sm text-white">Supports PNG, JPG, GIF up to 10MB</p>
     </div>
   );
 };
@@ -173,15 +170,7 @@ export default function Home() {
       <LoadingSpinner loading={loading} />
       <GridBeams>
       <div className="container mx-auto px-4 py-8 max-w-4xl">
-        {/* Header */}
         <div className="text-center mb-8">
-          <Image
-            src="/lastminuteengineering-logo.png"
-            alt="Logo"
-            className="h-12 mx-auto"
-            width={60}
-            height={100}
-          />
           <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
             AI Schematic Generator
           </h1>
@@ -190,13 +179,11 @@ export default function Home() {
           </p>
         </div>
 
-        {/* Main Form Card */}
 
-        <div className="bg-gray-300 rounded-2xl shadow-xl p-8 mb-8">
+        <div className="bg-transparent rounded-2xl shadow-xl p-8 mb-8 text-white">
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Prompt Input */}
             <div className="space-y-2">
-              <label className="block text-sm font-semibold text-gray-700">
+              <label className="block text-sm font-semibold text-amber-50">
                 Describe what you want to create
               </label>
               <textarea
@@ -208,9 +195,8 @@ export default function Home() {
               />
             </div>
 
-            {/* File Upload */}
-            <div className="space-y-2">
-              <label className="block text-sm font-semibold text-gray-700">
+            <div className="space-y-2 text-white">
+              <label className="block text-sm font-semibold text-amber-50">
                 Upload reference image (optional)
               </label>
               <FileDropzone 
@@ -220,7 +206,6 @@ export default function Home() {
               />
             </div>
 
-            {/* Action Buttons */}
             <div className="flex space-x-3">
               <button
                 type="submit"
@@ -251,7 +236,6 @@ export default function Home() {
           </form>
         </div>
               
-        {/* Results Section */}
         {result && (
           <div className="space-y-6">
             {result.error ? (
@@ -264,7 +248,6 @@ export default function Home() {
               </div>
             ) : (
               <>
-                {/* Generated Image */}
                 {result.imageUrl && (
                   <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
                     <div className="bg-gradient-to-r from-blue-500 to-purple-500 text-white p-4">
@@ -283,7 +266,6 @@ export default function Home() {
                   </div>
                 )}
 
-                {/* Explanation */}
                 {result.explanation && (
                   <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
                     <div className="bg-gradient-to-r from-green-500 to-teal-500 text-white p-4">
@@ -302,7 +284,6 @@ export default function Home() {
                   </div>
                 )}
 
-                {/* Sources */}
                 {result.sources && result.sources.length > 0 && (
                   <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
                     <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white p-4">
@@ -336,31 +317,30 @@ export default function Home() {
           </div>
         )}
         
-        {/* Features Section */}
         {!result && !loading && (
           <div className="mt-12 grid md:grid-cols-3 gap-6">
-            <div className="text-center p-6 bg-white rounded-xl shadow-md">
+            <div className="text-center p-6 bg-gradient-to-br from-blue-800 to-fuchsia-600 rounded-xl shadow-md">
               <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <ImageIcon className="w-6 h-6 text-blue-600" />
               </div>
               <h3 className="font-semibold text-gray-900 mb-2">AI-Powered Generation</h3>
-              <p className="text-gray-600 text-sm">Advanced AI creates detailed schematics from your descriptions</p>
+              <p className="text-amber-50 text-sm">Advanced AI creates detailed schematics from your descriptions</p>
             </div>
-            
-            <div className="text-center p-6 bg-white rounded-xl shadow-md">
+
+            <div className="text-center p-6 bg-gradient-to-br from-green-400 to-blue-500 rounded-xl shadow-md">
               <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Upload className="w-6 h-6 text-green-600" />
               </div>
               <h3 className="font-semibold text-gray-900 mb-2">Image Upload Support</h3>
-              <p className="text-gray-600 text-sm">Upload reference images to enhance your schematic generation</p>
+              <p className="text-amber-50 text-sm">Upload reference images to enhance your schematic generation</p>
             </div>
-            
-            <div className="text-center p-6 bg-white rounded-xl shadow-md">
+
+            <div className="text-center p-6 bg-gradient-to-br from-yellow-300 to-red-600 rounded-xl shadow-md">
               <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <BookOpen className="w-6 h-6 text-purple-600" />
               </div>
               <h3 className="font-semibold text-gray-900 mb-2">Detailed Explanations</h3>
-              <p className="text-gray-600 text-sm">Get comprehensive explanations with reliable sources</p>
+              <p className="text-amber-50 text-sm">Get comprehensive explanations with reliable sources</p>
             </div>
           </div>
         )}
